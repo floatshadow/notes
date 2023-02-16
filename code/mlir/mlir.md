@@ -95,7 +95,9 @@ module {
 - mlir 中使用对应的 Block 和 Region 的概念. IR 是递归定义的, 一个 Operation 可以有多个内嵌的 Region, 每个 Region 是一个 Block 的链表, 每个 Block 又包含一串 Opeation, 相应的 Operation 也就支持一系列 get 方法. 
 Block 有点类似于 `llvm::Function`.
 
-
+`Operation` 和 `Op` 的区别:
+- `Operation` 是 opaque 的, 只提供 generic API, `Op` 的子类是所有实际的 Operation 类型
+- `Op` 及其子类使用起来类似于 `Operation *` 的智能指针, 因此 Op 某种意义上是值传递的
 
 使用 llvm::dyn_cast 或 llvm::cast 做 Downcast, `getOperation()` 做 Upcast
 ```cpp
@@ -121,6 +123,76 @@ if (opsetAttr)
 // getAttr
 mlir::Type targetType = op->getAttr("to").cast<::mlir::TypeAttr>().getValue();
 ```
+
+使用 ODS (tablegen) 指定 Operation 的属性
+
+首先定义基类 
+```tablegen
+// Base class for toy dialect operations. This operation inherits from the base
+// `Op` class in OpBase.td, and provides:
+//   * The parent dialect of the operation.
+//   * The mnemonic for the operation, or the name without the dialect prefix.
+//   * A list of traits for the operation.
+class Toy_Op<string mnemonic, list<Trait> traits = []> :
+    Op<Toy_Dialect, mnemonic, traits>;
+```
+
+下面具体看一个例子:
+```tablegen
+def ConstantOp : Toy_Op<"constant"> {
+  // The constant operation takes an attribute as the only input.
+  // `F64ElementsAttr` corresponds to a 64-bit floating-point ElementsAttr.
+  let arguments = (ins F64ElementsAttr:$value);
+
+  // The constant operation returns a single value of TensorType.
+  // F64Tensor corresponds to a 64-bit floating-point TensorType.
+  let results = (outs F64Tensor);
+}
+```
+`Toy_Op<"constant">` 将用于匹配 `ConstantOp::getOperationName`.
+这里 ODS 可以从 arguments 和 results 中自动推导出 trait, 也即:
+
+```cpp
+class ConstantOp : public mlir::Op<
+                     /// `mlir::Op` is a CRTP class, meaning that we provide the
+                     /// derived class as a template parameter.
+                     ConstantOp,
+                     /// The ConstantOp takes zero input operands.
+                     mlir::OpTrait::ZeroOperands,
+                     /// The ConstantOp returns a single result.
+                     mlir::OpTrait::OneResult,
+                     /// We also provide a utility `getType` accessor that
+                     /// returns the TensorType of the single result.
+                     mlir::OpTraits::OneTypedResult<TensorType>::Impl> 
+```
+
+使用 custom 的 dump 格式, 需要重载 `void PrintOp::print(mlir::OpAsmPrinter &printer)` 和 `mlir::ParseResult PrintOp::parse(mlir::OpAsmParser &parser, mlir::OperationState &result)`:
+```tablegen
+/// Consider a stripped definition of `toy.print` here.
+def PrintOp : Toy_Op<"print"> {
+  let arguments = (ins F64Tensor:$input);
+
+  // Divert the printer and parser to `parse` and `print` methods on our operation,
+  // to be implemented in the .cpp file. More details on these methods is shown below.
+  let hasCustomAssemblyFormat = 1;
+}
+```
+或者使用 declarative format:
+```tablegen
+/// Consider a stripped definition of `toy.print` here.
+def PrintOp : Toy_Op<"print"> {
+  let arguments = (ins F64Tensor:$input);
+
+  // In the following format we have two directives, `attr-dict` and `type`.
+  // These correspond to the attribute dictionary and the type of a given
+  // variable represectively.
+  let assemblyFormat = "$input attr-dict `:` type($input)";
+}
+```
+
+从上面的例子, 我们看到几个 Operation 相关的重要元素 `Op`, `OpTrait`, `ins/outs`, `TypeConstraint` 和 `AttrConstraint`.
+这些具体的约束, 可参考文档 `Operation Definition Specification (ODS)`.
+
 
 #### Filtered Iterator
 对于 Block, 可以用 `getOps<OpTy>` 过滤子 Operations, 类似的 Region 也可以过滤子 Block
@@ -188,3 +260,15 @@ Implementation:
 - Dialect 内部 Operation 转换 -> Dialect Transformation (C++/DRR实现)
 - Dialect 之间 相互转换 -> DialectConversion (C++/DRR 实现)
 - Pass 优化 (C++/DRR 实现)
+
+在 Tot Tutorial 中在 Ops.td 定义了 Dialect, 使用 `mlir-tblgen` 生成头文件和 cpp 文件, 在默认情况下 `MLIRContext` 只会 Load 默认的 Builtin Dialect, 需要手动 Load
+
+在 `examples/toy/Ch2/include/toy` 下的 CMakeLists 中, 如此生成文件
+```cmake
+set(LLVM_TARGET_DEFINITIONS Ops.td)
+mlir_tablegen(Ops.h.inc -gen-op-decls)
+mlir_tablegen(Ops.cpp.inc -gen-op-defs)
+mlir_tablegen(Dialect.h.inc -gen-dialect-decls)
+mlir_tablegen(Dialect.cpp.inc -gen-dialect-defs)
+add_public_tablegen_target(ToyCh2OpsIncGen)
+```
