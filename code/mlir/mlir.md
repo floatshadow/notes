@@ -26,6 +26,19 @@ OpBuilder `toyc.cpp:dumpMLIR` `MLIRGen.cpp:MLIRGenImpl`
   pm.addNestedPass<mlir::toy::FuncOp>(mlir::createCanonicalizerPass());
 ```
 
+注册 Toy 的所有 Interface
+```cpp
+/// Dialect initialization, the instance will be owned by the context. This is
+/// the point of registration of types and operations for the dialect.
+void ToyDialect::initialize() {
+  addOperations<
+#define GET_OP_LIST
+#include "toy/Ops.cpp.inc"
+      >();
+  addInterfaces<ToyInlinerInterface>();
+}
+```
+
 样例
 ```plaintext
 # RUN: toyc-ch2 %s -emit=mlir 2>&1 | FileCheck %s
@@ -384,4 +397,107 @@ class Pattern<
 def FoldConstantReshapeOptPattern : Pat<
   (ReshapeOp:$res (ConstantOp $arg)),
   (ConstantOp (ReshapeConstant $arg, $res))>;
+```
+
+
+在 CMakeLists.txt 中, 生成 rewriter
+```cmake
+set(LLVM_TARGET_DEFINITIONS mlir/ToyCombine.td)
+mlir_tablegen(ToyCombine.inc -gen-rewriters)
+add_public_tablegen_target(ToyCh3CombineIncGen)
+```
+
+以上的 Pattern 针对的是 Toy Dialect, 如果要为别的 Dialect 写 Pattern 不能重用代码, 我们希望能写出 Generic 的代码, 这由 `Interface` 实现.
+
+内联接口 `DialectInlinerInterface`, 实现位于 `examples/toy/Ch5/mlir/Dialect.cpp`, 样例接口 `isLegalToInline`, `handleTerminator`.
+在 Toy 中, terminator 只有 toy.return, 我们的处理方法是 return 返回的值全部替换成 ReturnOp 的 value (注意 Toy 的 Return 可以有多个 Operand 以及我们熟悉的老朋友 RAUW). 
+```cpp
+  /// This hook is called when a terminator operation has been inlined. The only
+  /// terminator that we have in the Toy dialect is the return
+  /// operation(toy.return). We handle the return by replacing the values
+  /// previously returned by the call operation with the operands of the
+  /// return.
+  void handleTerminator(Operation *op,
+                        ArrayRef<Value> valuesToRepl) const final {
+    // Only "toy.return" needs to be handled here.
+    auto returnOp = cast<ReturnOp>(op);
+
+    // Replace the values directly with the return operands.
+    assert(returnOp.getNumOperands() == valuesToRepl.size());
+    for (const auto &it : llvm::enumerate(returnOp.getOperands()))
+      valuesToRepl[it.index()].replaceAllUsesWith(it.value());
+  }
+```
+
+这是 Toy 的 Interface, 我们还可以使用 mlir 标准库的 Interface. 
+例如为了使 toy.generic_call 自动获取 callable-like 的属性并生成相关的方法, 我们可以使用 `mlir/Interfaces/CallInterfaces.td` 中的 `CallOpInterface` 和 `CallableOpInterface` 两个接口, `DeclareOpInterfaceMethods` 会自动声明接口中的方法:
+```tablegen
+def FuncOp : Toy_Op<"func",
+    [DeclareOpInterfaceMethods<CallableOpInterface>]> {
+  ...
+}
+
+def GenericCallOp : Toy_Op<"generic_call",
+    [DeclareOpInterfaceMethods<CallOpInterface>]> {
+  ...
+}
+```
+这几个方法具体的 Definition 请看 `Dialect.cpp`.
+此外还有 `CastOp`, 由于 mlir func 是 generic type 的, 需要把 main 函数里确定形状的 tensor 转换成 generic 形式, 方便 inliner.
+
+现在的代码是一个 staic 和 dynamic shape 混合的 IR, 我们还需要 Shape Inference, 在 `examples/toy/Ch5/include/toy/ShapeInferenceInterface.td` 中声明了一个 generic 的接口用于干这件事, methods 比较特殊, 使用字符串声明返回类型和方法名称.
+
+```tablegen
+def ShapeInferenceOpInterface : OpInterface<"ShapeInference"> {
+  let description = [{
+    Interface to access a registered method to infer the return types for an
+    operation that can be used during type inference.
+  }];
+
+  let methods = [
+    InterfaceMethod<"Infer and set the output shape for the current operation.",
+                    "void", "inferShapes">
+  ];
+}
+```
+
+然后我们这里就可以为 MulOp 做类型推断了, 首先加上 ShapeInferenceOpInterface 的方法声明
+```tablegen
+def MulOp : Toy_Op<"mul",
+    [..., DeclareOpInterfaceMethods<ShapeInferenceOpInterface>]> {
+  ...
+}
+```
+然后实现
+```cpp
+/// Infer the output shape of the MulOp, this is required by the shape inference
+/// interface.
+void MulOp::inferShapes() { getResult().setType(getLhs().getType()); }
+```
+
+为了执行这个 rewrite, 我们创建并注册一个 ShapeInferencePass
+```cpp
+class ShapeInferencePass
+    : public mlir::PassWrapper<ShapeInferencePass, FunctionPass> {
+public:
+  void runOnFunction() override {
+    ...
+  }
+};
+```
+
+在 `toyc.cpp` Driver 中:
+```cpp
+  mlir::PassManager pm(&context);
+  // Apply any generic pass manager command line options and run the pipeline.
+  applyPassManagerCLOptions(pm);
+  // Inline all functions into main and then delete them.
+  pm.addPass(mlir::createInlinerPass());
+
+  // Now that there is only one function, we can infer the shapes of each of
+  // the operations.
+  mlir::OpPassManager &optPM = pm.nest<mlir::toy::FuncOp>();
+  optPM.addPass(mlir::toy::createShapeInferencePass());
+  optPM.addPass(mlir::createCanonicalizerPass());
+  optPM.addPass(mlir::createCSEPass());
 ```
