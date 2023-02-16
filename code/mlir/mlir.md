@@ -16,6 +16,16 @@ OpBuilder `toyc.cpp:dumpMLIR` `MLIRGen.cpp:MLIRGenImpl`
   mlir::OpBuilder builder;
 ```
 
+管理 Pass `toyc.cpp:dumpMLIR`
+```cpp
+  mlir::PassManager pm(&context);
+  // Apply any generic pass manager command line options and run the pipeline.
+  applyPassManagerCLOptions(pm);
+
+  // Add a run of the canonicalizer to optimize the mlir module.
+  pm.addNestedPass<mlir::toy::FuncOp>(mlir::createCanonicalizerPass());
+```
+
 样例
 ```plaintext
 # RUN: toyc-ch2 %s -emit=mlir 2>&1 | FileCheck %s
@@ -166,6 +176,13 @@ class ConstantOp : public mlir::Op<
                      mlir::OpTraits::OneTypedResult<TensorType>::Impl> 
 ```
 
+当然, 也可以手动设置 trait, 这样能给 Optimizer 更多的信息.
+例如, 对于无副作用的 `toy.transpose` 我们可以设置为 `NoSideEffect`:
+```tablegen
+def TransposeOp : Toy_Op<"transpose", [NoSideEffect]> {...}
+```
+这样 Optimizer 能够消除掉那些 Dead Transpose
+
 使用 custom 的 dump 格式, 需要重载 `void PrintOp::print(mlir::OpAsmPrinter &printer)` 和 `mlir::ParseResult PrintOp::parse(mlir::OpAsmParser &parser, mlir::OperationState &result)`:
 ```tablegen
 /// Consider a stripped definition of `toy.print` here.
@@ -271,4 +288,100 @@ mlir_tablegen(Ops.cpp.inc -gen-op-defs)
 mlir_tablegen(Dialect.h.inc -gen-dialect-decls)
 mlir_tablegen(Dialect.cpp.inc -gen-dialect-defs)
 add_public_tablegen_target(ToyCh2OpsIncGen)
+```
+
+## Pass and Rewrite
+
+首先需要明确 [Canonicalization](https://sunfishcode.github.io/blog/2018/10/22/Canonicalization.html) 及其意义.
+mlir 官方文档也有一篇专门讲 [Operation Canonicalization](https://mlir.llvm.org/docs/Canonicalization/).
+
+在 LLVM 中, InstCombine 和 DAGCombine 就是我们熟知的 canonicalization pass.
+主要目的是为了方便后续的优化和分析可以针对一种统一的形式.
+
+mlir 的典范化是一个 Pass, 通过递归地匹配所有 Dialect 里的典范化 pattern 做贪心的 rewrite.
+需要注意的是, 这个过程是重复直到达到不动点或者次数上限.
+
+在 Toy 中, 为了消除 transpose(transpose(x)) 这儿冗余的操作, 我们把 rewrite 嵌入 cannibalization 的 pipeline 里.
+
+首先在 ODS 中, 可以添加如下声明, 会生成 `getCanonicalizationPatterns` 方法的声明:
+```tablegen
+def MyOp : ... {
+  // I want to define a fully general set of patterns for this op.
+  let hasCanonicalizer = 1;
+}
+
+def OtherOp : ... {
+  // A single "matchAndRewrite" style RewritePattern implemented as a method
+  // is good enough for me.
+  let hasCanonicalizeMethod = 1;
+}
+```
+
+在源代码中对应的实现:
+```cpp
+void MyOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
+                                       MLIRContext *context) {
+  patterns.add<...>(...);
+}
+
+// For Toy TransposeOp
+// Register our patterns for rewrite by the Canonicalization framework.
+void TransposeOp::getCanonicalizationPatterns(
+    RewritePatternSet &results, MLIRContext *context) {
+  results.add<SimplifyRedundantTranspose>(context);
+}
+
+LogicalResult OtherOp::canonicalize(OtherOp op, PatternRewriter &rewriter) {
+  // patterns and rewrites go here.
+  return failure();
+}
+
+// For Toy TransposeOp
+/// This method is attempting to match a pattern and rewrite it. The rewriter
+/// argument is the orchestrator of the sequence of rewrites. It is expected
+/// to interact with it to perform any changes to the IR from here.
+mlir::LogicalResult
+matchAndRewrite(TransposeOp op,
+                mlir::PatternRewriter &rewriter) const override {
+  // Look through the input of the current transpose.
+  mlir::Value transposeInput = op.getOperand();
+  TransposeOp transposeInputOp = transposeInput.getDefiningOp<TransposeOp>();
+
+  // Input defined by another transpose? If not, no match.
+  if (!transposeInputOp)
+    return failure();
+
+  // Otherwise, we have a redundant transpose. Use the rewriter.
+  rewriter.replaceOp(op, {transposeInputOp.getOperand()});
+  return success();
+}
+```
+
+同样的, 使用 tablegen 的声明式 pattern match and rewrite 系统 (DRR).
+先插入提一句 tablegen 的 dag 类型格式, 见 [Tablegen Programmar Reference](https://llvm.org/docs/TableGen/ProgRef.html).
+dag node 由一个 operator 以及零个或多个 argument 组成
+
+( operator argument1, argument2, … ) 
+
+
+| Format	| Meaning | 
+| ---     | ---     |
+| value	| argument value |
+| value:name	| argument value and associated name | 
+| name	| argument name with unset (uninitialized) value |
+
+value 是任意的 TableGen Value.
+
+在 DDR 中, 在 `mlir/IR/PatternBase.td` 中定义了 DDR 的 pattenr 格式:
+```tablegen
+class Pattern<
+    dag sourcePattern, list<dag> resultPatterns,
+    list<dag> additionalConstraints = [],
+    dag benefitsAdded = (addBenefit 0)>;
+```
+以及 Toy 的样例
+```tablegen
+def FoldConstantReshapeOptPattern : Pat<
+  (ReshapeOp:$res (ConstantOp $arg)),
+  (ConstantOp (ReshapeConstant $arg, $res))>;
 ```
