@@ -1,0 +1,227 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[english]{babel}
+\usepackage{amsfonts, amsmath, amssymb, amsthm}
+\usepackage{multicol, multirow}
+\usepackage{graphicx}
+\usepackage{tikz-cd}
+
+\usepackage{hyperref}
+\hypersetup{
+  breaklinks,
+  unicode,
+  linktoc=all,
+  bookmarksnumbered=true,
+  bookmarksopen=true,
+  pdfkeywords={ElegantBook},
+  colorlinks,
+  linkcolor=winered,
+  citecolor=winered,
+  urlcolor=winered,
+  plainpages=false,
+  pdfstartview=FitH,
+  pdfborder={0 0 0},
+  linktocpage
+}
+
+
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  top=25.4mm, bottom=25.4mm,
+  left=20mm, right=20mm,
+  headheight=2.17cm,
+  headsep=4mm,
+  footskip=12mm
+}
+
+\usepackage{xeCJK}
+\usepackage{mathrsfs}
+\usepackage{indentfirst,comment}
+\usepackage{fontspec}
+
+
+\usepackage[most]{tcolorbox}
+
+
+\newtcbtheorem[auto counter, number within = section]{Theorem}{Theorem}{
+  enhanced,
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  fonttitle=\bfseries,
+  boxed title style={
+    size=large,
+    colback=blue!75!black, 
+    colframe=blue!75!black,
+  } 
+}{thm}
+
+\newtcbtheorem[auto counter, number within = section]{Proposition}{Proposition}{
+  enhanced,
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  fonttitle=\bfseries,
+  boxed title style={
+    size=large,
+    colback=blue!75!black, 
+    colframe=blue!75!black,
+  } 
+}{proposition}
+
+\newtcbtheorem[no counter]{Proof}{Proof}{
+  enhanced,
+  colback=white,
+  colframe=blue!25,
+  fonttitle=\bfseries,
+  coltitle=black,
+  boxed title style={
+    size=large,
+    colback=blue!25,
+    colframe=blue!25,
+  } 
+}{prf}
+\newtcbtheorem[no counter]{Remark}{Remark}{
+  enhanced,
+  colback=white,
+  colframe=yellow!50!orange,
+  fonttitle=\bfseries,
+  coltitle=black,
+  boxed title style={
+    size=large,
+    colback=blue!25,
+    colframe=blue!25,
+  } 
+}{rmk}
+
+\newtcbtheorem[auto counter, number within = section]{Definition}{Definition}{
+  enhanced,
+  colback=green!5!white,
+  colframe=green!75!black,
+  fonttitle=\bfseries,
+  boxed title style={
+    size=large,
+    colback=blue!75!black, 
+    colframe=blue!75!black,
+  } 
+}{def}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\z}{\left}
+\newcommand{\y}{\right}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+\newcommand*{\isomap}{\stackrel{\sim}{\mapsto}}
+
+\title{流形导论}
+\date{February 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Tangent Vectors in $\R^n$ as Derivations}
+\subsection{Derivations}
+我们用 $p = (p^1, \dots, p^n)$ 表示点, 用
+$$
+\begin{bmatrix} v^1 \\ v^2 \\ \vdots \\ v^n \end{bmatrix}
+$$
+表示切空间的向量.
+
+\begin{Definition}{Directional Devirevative and Derivations}{}
+对 $\R^n$ 中过点 $p = (p^1, \dots, p^n)$ 和方向 $v = \z< v^1, \dots, v^n\y>$ 的直线, 我们参数化为
+$$
+c(t) = (p^1 + tv^1, \dots, p^n + tv^n)
+$$
+\begin{itemize}
+\item 
+方向导数
+$$
+D_v f = \lim_{t \to 0} \frac{f(c(t)) - f(p)}{t} = \sum_{i=1}^{n} \frac{dc^i}{dt}(0)\frac{\partial f}{\partial x^i}(p) = \sum_{i=1}^{n}v^i \frac{\partial f}{\partial x^i}(p)
+$$
+因此 $D_v$ 可以看作一个线性算子
+$$
+D_v \colon C^{\infty}_p \mapsto \R 
+$$ 
+\item
+定义更一般的在点 $p$ 的导数, 只要是一个线性算子 $D\colon C^{\infty}_p \mapsto \R$ 且满足和方向导数一样的 Leibniz 规则
+$$
+D_v(fg) = (D_vf)g(p) + f(p)D_vg 
+$$
+所有在点 $p$ 的导数集合记作 $\mathcal{D}_p(\R^n)$.
+\end{itemize}
+\end{Definition}
+
+由下面这个命题, 使得我们可以把原来切空间向量 $v$ 使用线性算子的基 $ \z\{ \partial / \partial x^i|_p \y\}$来表示
+\begin{equation}
+    v = \sum v^i \frac{\partial}{\partial x^i} \Big|_p
+\end{equation}
+
+\begin{Proposition}{}{}
+很自然的从我们由切空间的向量 $v$ 定义相应的方向导数可以导出线性映射
+\begin{equation}
+\begin{aligned}
+\phi \colon T_p(\R^n) &\mapsto \mathcal{D}_p(\R^n) \\ 
+v &\mapsto \sum{v^i}\frac{\partial}{\partial x^i} \Big|_p
+\end{aligned}  
+\end{equation}
+也就是说 $D_v \to D \to \mathcal{D}_p(\R^n)$.
+这个线性映射是一个 isomorphism.
+\end{Proposition}
+
+\subsection{Vector Fields}
+\begin{Definition}{Vector Fields}{}
+向量场 $X$ 可以看作一个映射, 给 $\R^n$ 上开集 $U$ 每个点 $p$ 一个切空间向量 $X_p$:
+$$
+\begin{aligned}
+    X \colon U &\mapsto T_p(\R^n) \\
+    p &\mapsto X_p = \sum{a^i(p)\frac{\partial}{\partial x^i}\Big|_p}, \quad a^i(p) \in \R
+\end{aligned}
+$$
+\end{Definition}
+
+显然, $X$ 可以被看作算子 $a^i \colon C^{\infty} \mapsto \R$ 组成的向量.
+例如对于开集 $\R^2 - \z\{\mathbf{0}\y\}$ 和点 $p = (x,y)$:
+$$
+X = \frac{-y}{\sqrt{x^2 + y^2}} \frac{\partial }{\partial x} + \frac{x}{\sqrt{x^2 + y^2}}\frac{\partial}{\partial y} = \z<\frac{-y}{\sqrt{x^2 + y^2}},  \frac{x}{\sqrt{x^2 + y^2}}\y>
+$$
+我们观察到, 所有的向量场组成一个 Abel 加法群 $\mathfrak{X}(U)$.
+另一方面开集 $U$ 上所有的 $C^{\infty}$ 函数集记作 $C^{\infty}(U)$ 或者 $\mathcal{F}(U)$, 构成一个 Ring.
+因此我们很自然地想要定义向量场和 $C^{\infty}$ 函数的乘法, 从而导出一个左 $R$-module:
+$$
+(fX)_p \defeq f(p)X_p, \quad p \in U
+$$
+更具体地, $fX = \sum (fa^i)\partial / \partial x^i$ 也是一个向量场.
+
+同时不可忽略的是, $X$ 本身就也是一个线性算子:
+$$
+\begin{aligned}
+X \colon C^{\infty}(U) &\mapsto C^{\infty}(U) \\    
+f &\mapsto Xf \defeq \sum a^i \frac{\partial f}{\partial x^i}.
+\end{aligned}
+$$
+容易验证, $X$ 符合 Leibniz 规则, 但是需要注意的是 $X$ 并不是一个导数.
+原因简而言之, 导数为 $D \colon C^{\infty}(U) \mapsto \R$, 而向量场是 $X \colon C^{\infty}(U) \mapsto C^{\infty}(U)$.
+因此我们需要再给出 $\mathfrak{X}(U)$ 的代数刻画:
+
+\begin{Definition}{Derivations of Algebra}{}
+对于域 $K$ 代数 $A$, $A$ 的导数定义为 $K$ 线性映射 $D \colon A \mapsto A$ 且满足 Leibniz 规则:
+$$
+D(ab) = (Da)b + aDb, \quad \forall a,b \in A
+$$
+\end{Definition}
+如果我们观察 $A$ 的导数, 不难发现他们满足加法和关于域 $K$ 的数乘, 因为他们构成一个向量空间, 记作 $\mathrm{Der}(A)$.  
+因此, 我们把 $\mathfrak{X}(U)$ 看作 $C^{\infty}(U)$ 的导数:
+$$
+\begin{aligned}
+    \varphi \colon \mathfrak{X}(U) &\mapsto \mathrm{Der}(C^{\infty}(U)) \\
+    X &\mapsto (f\mapsto Xf). 
+\end{aligned}
+$$
+\begin{Remark}{}{}
+\begin{itemize}
+    \item $T_p(\R^n) \isomap \mathcal{D}_p(\R^n)$, 由$C^{\infty}_p$ 点导数定义
+    \item $\mathfrak{X}(U) \isomap \mathrm{Der}(C^{\infty}(U))$, 由代数 $C^{\infty}(U)$ 的导数定义 (证明略)
+\end{itemize}
+\end{Remark}
+\end{document}
+
