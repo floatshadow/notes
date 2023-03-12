@@ -13,6 +13,7 @@
 - Conway Semiring
 - Curry–Howard correspondence
 - Chomsky–Schützenberger representation theorem
+- Stone Duality
 
 ## Algebra
 
