@@ -1,0 +1,207 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[english]{babel}
+\usepackage{amsfonts, amsmath, amssymb, amsthm}
+\usepackage{multicol, multirow}
+\usepackage{graphicx}
+\usepackage{tikz-cd}
+
+\usepackage{hyperref}
+\hypersetup{
+  breaklinks,
+  unicode,
+  linktoc=all,
+  bookmarksnumbered=true,
+  bookmarksopen=true,
+  pdfkeywords={ElegantBook},
+  colorlinks,
+  linkcolor=winered,
+  citecolor=winered,
+  urlcolor=winered,
+  plainpages=false,
+  pdfstartview=FitH,
+  pdfborder={0 0 0},
+  linktocpage
+}
+
+
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  top=25.4mm, bottom=25.4mm,
+  left=20mm, right=20mm,
+  headheight=2.17cm,
+  headsep=4mm,
+  footskip=12mm
+}
+
+\usepackage{xeCJK}
+\usepackage{mathrsfs}
+\usepackage{indentfirst,comment}
+\usepackage{fontspec}
+
+
+\usepackage[most]{tcolorbox}
+
+
+\newtcbtheorem[auto counter, number within = section]{Theorem}{Theorem}{
+  enhanced,
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  fonttitle=\bfseries,
+  boxed title style={
+    size=large,
+    colback=blue!75!black, 
+    colframe=blue!75!black,
+  } 
+}{thm}
+
+\newtcbtheorem[auto counter, number within = section]{Proposition}{Proposition}{
+  enhanced,
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  fonttitle=\bfseries,
+  boxed title style={
+    size=large,
+    colback=blue!75!black, 
+    colframe=blue!75!black,
+  } 
+}{proposition}
+
+\newtcbtheorem[no counter]{Proof}{Proof}{
+  enhanced,
+  colback=white,
+  colframe=blue!25,
+  fonttitle=\bfseries,
+  coltitle=black,
+  boxed title style={
+    size=large,
+    colback=blue!25,
+    colframe=blue!25,
+  } 
+}{prf}
+\newtcbtheorem[no counter]{Remark}{Remark}{
+  enhanced,
+  colback=white,
+  colframe=yellow!50!orange,
+  fonttitle=\bfseries,
+  coltitle=black,
+  boxed title style={
+    size=large,
+    colback=blue!25,
+    colframe=blue!25,
+  } 
+}{rmk}
+
+\newtcbtheorem[auto counter, number within = section]{Definition}{Definition}{
+  enhanced,
+  colback=green!5!white,
+  colframe=green!75!black,
+  fonttitle=\bfseries,
+  boxed title style={
+    size=large,
+    colback=blue!75!black, 
+    colframe=blue!75!black,
+  } 
+}{def}
+
+\newtcbtheorem[auto counter, number within = section]{Example}{Example}{
+  enhanced,
+  colback=white,
+  colframe=gray,
+  fonttitle=\bfseries,
+}{exa}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\z}{\left}
+\newcommand{\y}{\right}
+\newcommand*{\defeq}{\stackrel{\text{def}}{=}}
+\newcommand*{\isomap}{\stackrel{\sim}{\mapsto}}
+\DeclareMathOperator{\image}{Im}
+
+\usepackage[
+backend=biber,
+style=alphabetic,
+sorting=ynt
+]{biblatex}
+%\addbibresource{ref.bib}
+
+\title{抽象代数·续}
+
+\date{March 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+这个笔记面向的读者是计算机科学专业的读者，希望在理论计算机科学，程序语言等方向拥有数学基础，并且假定已经修读了数学系的本科生《抽象代数》课程，对群、环、模、域等结构和一些相关定理有一定认识。
+由于课时的限制，许多教材会采用 M. Artin 的 Algebra 作为教材，作为入门固然不错，但是有所欠缺。
+自行学习难免陷入递归学习，效率低下的烦恼，这就是本篇笔记的想要解决的问题。
+
+\section{Category Theory}
+
+范畴，泛性质（product, co-product, fiber， fiber co-product），函子
+
+\section{Groups}
+正合链，直和，自由 Abel 群，有限生成 Abel 群，群环
+
+\subsection{Exact Sequence}
+\begin{Definition}{正合列}{}
+令一个同态序列
+\[
+G^\prime \stackrel{f}{\rightarrow} G \stackrel{g}{\rightarrow} G^{\prime\prime}
+\]
+是一个正合列，当且仅当 $\image f = \ker g$
+
+\end{Definition}
+
+下面我们给出一些正合链的重要例子：
+
+\begin{Example}{}{}
+对正合列
+\[
+H \stackrel{j}{\rightarrow} G \stackrel{\phi}{\rightarrow} G/H
+\]
+其中 $H$ 是 $G$ 的正规子群，同态 $j$ 是 inclusion, 同态 $\phi$ 是 canonical map.
+有 $\image j = \ker \phi = H$.
+
+
+下面再看这个两端为 $0$ 的正合列，
+\[
+0 \rightarrow G^\prime \stackrel{j}{\rightarrow} G \stackrel{\phi}{\rightarrow} G^{\prime\prime} \rightarrow 0
+\]
+
+注意到 $j$ 必定是 injective，$\phi$ 必定是 surjective.
+如果应用到上面的正规子群的例子，我们有：
+\[
+0 \rightarrow H \rightarrow G \rightarrow G/H \rightarrow 0
+\]
+\end{Example}
+
+同构定理以及正合列表示，略.
+
+\subsection{Normal Subgroups}
+
+\begin{Example}{$SL(F)$}{}
+行列式是一个乘法群同态 $GL(\F) \mapsto \F$，这个同态的 kernel 是行列式为 1 的那些方阵，即 $SL(\F)$.
+\end{Example}
+
+\subsection{Abelian Groups}
+
+
+\section{Modules}
+
+半单性，模范畴
+
+\section{Galois Theory}
+
+\section{Homology}
+
+\section{Algebraic Number Theory}
+
+\printbibliography
+\end{document}
+
