@@ -2,6 +2,10 @@
 ## Compiler
 
 - Cold/Hot Splitting (Ruijie Fang, GSoC'20, LLVM-CGO workshop 21)
+- Classical Loop Nest Transformation Framework on MLIR (Vinay M, Ranjith Kumar H, Siddharth Tiwary and Prashantha Nr, LLVM-CGO workshop 21)
+- LTO and Data Layout Optimisations in MLIR (Prashantha Nr and Ranjith Kumar, LLVM-CGO workshop 21)
+- Performance Tuning: Future Compiler Improvements (Denis Bakhvalov, LLVM-CGO workshop 21)
+- Latest Advancements in Automatic Vectorization Research (Stefanos Baziotis, LLVM-CGO workshop 21)
 
 ## Formal Language
 
