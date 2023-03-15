@@ -6,6 +6,7 @@
 - LTO and Data Layout Optimisations in MLIR (Prashantha Nr and Ranjith Kumar, LLVM-CGO workshop 21)
 - Performance Tuning: Future Compiler Improvements (Denis Bakhvalov, LLVM-CGO workshop 21)
 - Latest Advancements in Automatic Vectorization Research (Stefanos Baziotis, LLVM-CGO workshop 21)
+- Tail Call Optimization in Interpreters (no JIT): https://blog.reverberate.org/2021/04/21/musttail-efficient-interpreters.html
 
 ## Formal Language
 
