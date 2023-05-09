@@ -38,3 +38,4 @@
 
 - Condensed Mathematics
 - Reverse Mathematics (Kohlenberg;2005)
+- Proximal Policy Optimization, https://openai.com/research/openai-baselines-ppo
