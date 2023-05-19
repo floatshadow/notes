@@ -19,6 +19,12 @@
   - Blog https://blog.csdn.net/dashuniuniu/article/details/103462147
   - [A Simple, Fast Dominance Algorithm](https://www.cs.rice.edu/~keith/EMBED/dom.pdf) by Keith D. Cooper, Timothy J. Harvey, and Ken Kennedy
   - [An Experimental Study of Dynamic Dominators](https://arxiv.org/pdf/1604.02711.pdf) by Loukas Georgiadis, Giuseppe F. Italiano, Luigi Laura, Federico Santaroni. And corresponding practices [Finding Dominators in Practice](https://renatowerneck.files.wordpress.com/2016/06/gwtta04-dominators.pdf)
+- Pointer Analysis
+  - [Alias Analysis in LLVM](https://www.cse.psu.edu/~gxt29/papers/ShengHsiuLin_thesis.pdf) by Sheng-Hsiu Lin, a brief introduction to classification of pointer analysis and implementation in LLVM
+  - Points-to Analysis using BDDs by Marc Berndl, et al. PLDI 03
+  - The Ant and the Grasshopper: Fast and Accurate Pointer Analysis for Millions of Lines of Code by Hardekopf and Lin, PLDI 07, lazy detecting cycles
+  - Flow-sensitive pointer analysis for millions of lines of code by Hardekopf B, Lin C. CGO 11, partial SSA form
+  - CFLA & TBAA
 
 ## Formal Language
 
