@@ -25,6 +25,24 @@
   - The Ant and the Grasshopper: Fast and Accurate Pointer Analysis for Millions of Lines of Code by Hardekopf and Lin, PLDI 07, lazy detecting cycles
   - Flow-sensitive pointer analysis for millions of lines of code by Hardekopf B, Lin C. CGO 11, partial SSA form
   - CFLA & TBAA
+  - [Memory SSA- A Unified Approach for Sparsely Representing Memory Operations](https://www.airs.com/dnovillo/Papers/mem-ssa.pdf) by Novillo D , Canada R H
+  - LLVM example memory SSA code, find the nearest load/store to the same memory given a store inst.
+  ```cpp
+  llvm::MemorySSA *MSSA = &getAnalysis<MemorySSAWrapperPass>(F).getMSSA();
+  llvm::StoreInst *SI = ...;
+  MemoryAccess *storeMA = MSSA->getMemoryAccess(SI);
+  const llvm::Instruction *immediate_access_inst = nullptr;
+  for (const llvm::Insturction *I = getNextNonDebugInstruction(SI); I; I = getNextNonDebugInstruction(I)) {
+    MemoryAccess *ma = MSSA->getMemoryAccess(I);
+    if (ma) {
+      MemoryUseOrDef *ud = dyn_cast<MemoryUseOrDef>(ma);
+      if (ud && ud->getDefiningAccess() == storeMA) {
+        immediate_access_inst = ud->getMemoryInst();
+        break;
+      }
+    }
+  }
+  ```
 
 ## Formal Language
 
