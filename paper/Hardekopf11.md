@@ -15,7 +15,7 @@ Fast and Conservative, flow-insensitive, context-insensitive pointer analysis, g
 
 TODO
 
-### Annotation
+#### Annotation
 
 On CFG (focus on memory operations):
 - store: $v_{k+1} = \chi(v_{k})$, store **may** clobber the memory location v (MemoryDef)
@@ -32,10 +32,10 @@ We have:
 - x might point to v and other variable in flow-sensitive results: weak update
 
 
-### Def-Use Graph (DUG)
+#### Def-Use Graph (DUG)
 
 Similar to MemorySSA use-def graph. But do what the author call **Access Equivalence**. AE represents whether two address-taken variable has the same load/store pattern in **AUX** results (thus make further DUG simplification).
 
-## Algorithm Description
+### Algorithm Description
 
 TODO
