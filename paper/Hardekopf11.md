@@ -39,3 +39,23 @@ Similar to MemorySSA use-def graph. But do what the author call **Access Equival
 ### Algorithm Description
 
 TODO
+
+
+### Compared to POPL'09 Semi-Sparse Flow-Sensitive Pointer Analysis
+The author concludes that they performs a sparse analysis on top-level variables while using the standard iterative dataflow algorithm for the address-taken variables.
+To be specific, the algorithm proposed in POPL'09 does not deal with Phi Node problems in LLVM IR (compared to today's MemoryPhi of MemorySSA).
+The data flow graph of address-taken variable is densely encoded by edges of SEG and blended with top-level use-def chains: e.g.
+```plaintext
+              (use-def chain)
+STORE x1 z1 <----------------- x1 = ALLOC b
+|                                   |
+| (SEG edge)                        |
+|                                   |
+STORE w1 y2                         |
+|                                   |
+|                                   |
+|                                   |
+STORE x1 z2 <------------------------
+```
+The core analysis of address-taken variable still falls on load/store, and iterative along SEG. 
+But MemorySSA explicitly distinguish memory defs/uses and construct a sparse graph.
