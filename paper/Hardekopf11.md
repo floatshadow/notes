@@ -11,11 +11,15 @@ This paper proposes staged pointer analysis, which means we do a fast **AUX** an
 
 Fast and Conservative, flow-insensitive, context-insensitive pointer analysis, get __point-to sets__
 
+#### Main Sparse Analysis
+
+TODO
+
 ### Annotation
 
 On CFG (focus on memory operations):
 - store: $v_{k+1} = \chi(v_{k})$, store **may** clobber the memory location v (MemoryDef)
-- load:  $\miu(v_{k})$, load **may** use the memory location v (MemoryUse)
+- load:  $\mu(v_{k})$, load **may** use the memory location v (MemoryUse)
 - phi: insert Phi nodes for MemoryDefs
 
 We see that is basically the same as today's LLVM MemorySSA. And **may** result is conservative, which can be signified. For the store instruction:
@@ -23,7 +27,7 @@ We see that is basically the same as today's LLVM MemorySSA. And **may** result 
 *x = y;
 ```
 We have: 
-- x might not point to v in flow-sensitive results: $v_{k+1}$ is a copy of $v_{k}, y dependent
+- x might not point to v in flow-sensitive results: $v_{k+1}$ is a copy of $v_{k}$, y dependent
 - x might only point to v in flow-sensitive results: strong update to $v_{k}$, y dependent, $v_{k}$ in-dependent
 - x might point to v and other variable in flow-sensitive results: weak update
 
