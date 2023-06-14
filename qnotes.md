@@ -75,3 +75,19 @@
 - Condensed Mathematics
 - Reverse Mathematics (Kohlenberg;2005)
 - Proximal Policy Optimization, https://openai.com/research/openai-baselines-ppo
+- Lambada Calculus, category view: https://arxiv.org/abs/1202.4678
+- Complexity of Reachability Problems in Neural Networks: https://arxiv.org/abs/2306.05818 (p.s. can generator/fuzzer enumerate in a countable domain $D$? )
+- Three Candidate Plurality is Stablest for Correlations at most 1/11, KKMO conjecture: https://arxiv.org/abs/2306.03312 (correctness not sure)
+- Computational Intractability: A Guide to Algorithmic Lower Bounds by Demanine: https://hardness.mit.edu/ and http://erikdemaine.org/
+- CCC conference: https://computationalcomplexity.org/
+- Daniela Petrisan / Compositionality of Effects in Semantics and Automata Theory: https://www.youtube.com/watch?v=uAfoCc1XXCA
+- Takako Nemoto: On a decomposition of WKL!!: https://www.youtube.com/watch?v=sIbERCBMrro
+- A mathematical theory of true randomness (Part 2): https://www.youtube.com/watch?v=SQkv4v3qqPU
+- Internal Set Theory
+- Reverse Mathematics, IST axiom, WKL, WWKL, textbooks by Dzhaferov: https://link.springer.com/book/10.1007/978-3-031-11367-3
+- Quantum system is hard to learn: https://arxiv.org/abs/2306.04731
+- Quantum system verification： https://arxiv.org/abs/2306.04843
+- AdS/CFT duality: https://journals.aps.org/prd/abstract/10.1103/PhysRevD.97.086015
+- ECCC: https://eccc.weizmann.ac.il/
+- Model Checking Quantum System: https://academic.oup.com/nsr/article/6/1/28/5128515
+- LEO: A Programming Language for Formally Verified, Zero-Knowledge Applications: https://eprint.iacr.org/2021/651.pdf
