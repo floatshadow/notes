@@ -11,7 +11,7 @@
   + FP²: Fully in-Place Functional Programming (ICFP '23)
     * 即使是 GC，减少分配也是有意义的
     * 在并行环境下，判断是否可以 reuse 需要判断 uniqueness (?)，最简单的方法可能就是引用计数，运行时读一下
-    * Koka 处理并行，对象里加个状态判断是否被 shared
+    * Koka 处理并行，对象里加个状态判断是否被 shared，reddit 上的一个[帖子](https://www.reddit.com/r/ProgrammingLanguages/comments/1anyq4j/can_reference_counting_really_be_as_competitive/) 和 ICFP '24 的一个[测试](https://github.com/AndrasKovacs/staged?tab=readme-ov-file) 对 Koka 相比 GHC/OCaml/Java 等的性能测试做了详尽的讨论。
     * MaPLe 使用了 copy GC，相比引用能减少内存碎片 (?)
   + Parallelism in a Region Inference Context (PLDI '23)
     * 给程序推断出显示的 region memory 标注，不依赖 GC (可以用资源分析做得更好吗？)
