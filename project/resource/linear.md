@@ -22,7 +22,7 @@ cost analysis (POPL '21) 采用类似的方法来处理 closure capture 问题�
   + Borrow 本身并不依赖于 ownership 机制（譬如 Rust），在 FBIP/FIP 中，只作为单纯的性能改进提示（减少 Rc 操作）
   + Borrow 推断：Counting immutable beans: reference counting optimized for purely functional programming (IFL '19)，不过被指出，该 borrow inference 结果指导的 reuse 不是 space-safe 的
   + Borrow 似乎能借助 effect/contexutual type 描述，Lionel 的一个 [talk](https://hkuplg.github.io/2024/11/05/lionel/)
-  + Borrow 似乎对改进 AARA 对 closure/high-order 的处理有所帮助，譬如这段来自 koka 的[样例](https://github.com/koka-lang/koka/blob/dev/samples/learn/fip.kk)，有没有可能推断出类似 $\text{append} :: \& List(int^1) \rightarrow \& List(int^0) \rightarrow List(int^0)$
+  + Borrow 似乎对改进 AARA 对 closure/high-order 的处理有所帮助，譬如这段来自 koka 的[样例](https://github.com/koka-lang/koka/blob/dev/samples/learn/fip.kk)，有没有可能推断出类似 $\text{append} :: * List(int^1) \rightarrow  *List(int^0) \rightarrow List(int^0)$ (* 表示 borrow)
 
   ```koka
   // Unfortunately, we cannot quite check a recursive polymorphic fip version of `insert` yet

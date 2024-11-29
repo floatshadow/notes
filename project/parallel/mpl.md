@@ -14,7 +14,7 @@
     * Koka 处理并行，对象里加个状态判断是否被 shared，reddit 上的一个[帖子](https://www.reddit.com/r/ProgrammingLanguages/comments/1anyq4j/can_reference_counting_really_be_as_competitive/) 和 ICFP '24 的一个[测试](https://github.com/AndrasKovacs/staged?tab=readme-ov-file) 对 Koka 相比 GHC/OCaml/Java 等的性能测试做了详尽的讨论。
     * MaPLe 使用了 copy GC，相比引用能减少内存碎片 (?)
   + Parallelism in a Region Inference Context (PLDI '23)
-    * 给程序推断出显示的 region memory 标注，不依赖 GC (可以用资源分析做得更好吗？)
+    * 给程序推断出显示的 region memory 标注，不依赖 GC (但是 region inference 比较“灵车”)
     * 利用 region 标注减少 allocation 时需要加锁/同步的情况
     * Integrating region memory management and tag-free generational garbage collection (JFP '21)
   + Concurrent and parallel garbage collection for lightweight threads on multicore processors (ISMM '22)
@@ -24,7 +24,36 @@
   + Efficient tree-traversals: reconciling parallelism and dense data representations (ICFP '21)
     * 紧凑的 ADT 内存表示，加速 _树遍历_ 操作
     * regional 内存管理 + 引用计数
+    * 主要问题是对于 tree insert 之类的操作需要 nonpack 形式（即允许指针表示），至于删除节点的操作也是不能实现
+    * 依赖过于古老，Intel Cilk Runtime 已被 GCC 移除，源码也没法编译
   + WARDen: Specializing Cache Coherence for High-Level Parallel Languages (CGO '23)
+  + Oxidizing OCaml with Modal Memory Management (ICFP '24)
+    * Locality
+      | Feature  | Oxide Ocaml | Rust |  
+      | -------- | ------------ | ------- |
+      | local/global | escape? (stack/heap), coarser than lifetime variables, inference locally | escape analysis |
+    * Uniqueness
+      | Feature  | Oxide Ocaml | Rust |  
+      | -------- | ------------ | ------- |
+      | unique  | __caller__ provide uniquely referenced values, in-place update | ownership, move value |
+      | borrow | __callee__ use arguments locally, guarantee uniqueness | __calle__ is (implicitly) parameterized over lifetime |
+      | exclusive/shared |    exclusive is orthogonal to mutable                 | borrow mut/borrow |
+    * Linearity (Motivating Example: Closure)
+      | Feature  | Oxide Ocaml | Rust |  
+      | -------- | ------------ | ------- |
+      | once/many | uniqueness argument requires FnOnce; closure borrow create local reference, or escaped closure get ownership  | FnOnce, FnMut, Fn |
+      | separate |  | non-lexical lifetime |
+    * Sync (Encoding data-race)
+      | Feature  | Oxide Ocaml | Rust |  
+      | -------- | ------------ | ------- |
+      | sync/unsync | sync means exclusively mutable values, sync parameter requires __caller__ pass sharable arguments | FnOnce, FnMut, Fn |
+    
+    ```ocaml
+    val parallel : (unit -> 'a @ sync) @ sync once -> 'a Deffered.t
+    
+    val with_lock : 'a t -> ('a @ local exclusive -> 'b) @ local -> 'b
+    ```
+
 
 
 目前能做什么？
